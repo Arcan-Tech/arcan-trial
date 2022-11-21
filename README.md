@@ -19,4 +19,4 @@ First, clone or download this repository. Then, follow the instruction below.
 
 ### Run Arcan
 - Run the Arcan dashboard and the server: `docker compose up`
-- Visit the dashboard at [https://localhost:8080](https://localhost:8080)
+- Visit the dashboard at [https://localhost:3000](https://localhost:3000)
