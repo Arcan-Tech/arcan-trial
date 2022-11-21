@@ -1,0 +1,26 @@
+services:
+  arcan-dashboard:
+    image: ghcr.io/arcan-tech/arcan-dashboard-trial:${ARCAN_DASHBOARD_VERSION}
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_GRAPHQL_SERVER_URL: http://localhost:8080/graphql
+      REACT_APP_PUBLIC_URL: http://localhost:3000
+      REACT_APP_SKIP_AUTH: true
+  
+  arcan-server:
+    image: ghcr.io/arcan-tech/arcan-server-trial:${ARCAN_SERVER_VERSION}
+    restart: unless-stopped
+    entrypoint: ["./arcan-server.sh", "-l", "/licences/${ARCAN_LICENCE_FILENAME}"]
+    ports:
+      - "8080:8080"
+    environment:
+      ARCAN_LICENCE_FILENAME: "${ARCAN_LICENCE_FILENAME}"
+      SERVER_DATA_DIRECTORY: /tmp
+      SERVER_PORT: 8080                                    
+      SERVER_DEMO_MODE: false                              
+      SERVER_SKIP_AUTHZ: true                             
+      LOGGING_LEVEL: DEBUG 
+    volumes:
+      - "./licences/${ARCAN_LICENCE_FILENAME}:/licences/${ARCAN_LICENCE_FILENAME}:ro"
