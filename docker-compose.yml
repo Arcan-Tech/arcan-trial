@@ -24,3 +24,4 @@ services:
       LOGGING_LEVEL: DEBUG 
     volumes:
       - "./licences/${ARCAN_LICENCE_FILENAME}:/licences/${ARCAN_LICENCE_FILENAME}:ro"
+      - "./projects:/arcan-server/projects"
