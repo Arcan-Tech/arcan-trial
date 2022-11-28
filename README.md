@@ -17,7 +17,7 @@ First, clone or [download](https://github.com/Arcan-Tech/arcan-trial/archive/ref
 
 ### Run Arcan
 - To run the Arcan dashboard and the server, open your favourite terminal and navigate to the `/arcan-trial` folder. Within the folder execute: `docker compose up`.
-- You will find the dashboard at [https://localhost:3000](https://localhost:3000).
+- You will find the dashboard at [http://localhost:3000](http://localhost:3000).
 
 
 #### Optional
