@@ -7,7 +7,7 @@
 First, clone or [download](https://github.com/Arcan-Tech/arcan-trial/archive/refs/heads/main.zip) this repository (`/arcan-trial` folder). Then, follow the instructions below.
 
 ### Obtain the licence file
-- Fill in the form at: [https://www.arcan.tech](https://www.arcan.tech). You will receive the license at the provided email address.
+- Fill in this [form](https://www.arcan.tech/on-premise-trial/). You will receive the license at the provided email address.
 - Open the email and download the attached `ArcanLicence_YYYYMMDD` licence file.
 - Copy the `ArcanLicence_YYYYMMDD` licence file to the [licences](./licences) directory.
 
