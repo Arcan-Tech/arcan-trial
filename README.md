@@ -18,6 +18,8 @@ First, clone or [download](https://github.com/Arcan-Tech/arcan-trial/archive/ref
 ### Run Arcan
 - To run the Arcan dashboard and the server, open your favourite terminal and navigate to the `/arcan-trial` folder. Within the folder execute: `docker compose up`.
 - You will find the dashboard at [http://localhost:3000](http://localhost:3000).
+- To analyse a *remote* project, simply use the remote repo url when creating a new project. If the repo is private, remember to use a personal access token as password (see [the documentation](https://drive.google.com/file/d/12JHELVQzJ-sGpPticlivCjWEyTxuQLy8/view?usp=sharing) for more info).
+- To analyse a *local* project, copy the source code folder into `/arcan-trial/projects`. When creating a new project, specify the path to analyse as follows: `./projects/<folder_name>`  (see [the documentation](https://drive.google.com/file/d/12JHELVQzJ-sGpPticlivCjWEyTxuQLy8/view?usp=sharing) for more info).
 
 
 #### Optional
