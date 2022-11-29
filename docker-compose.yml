@@ -1,7 +1,8 @@
 services:
   arcan-dashboard:
     image: ghcr.io/arcan-tech/arcan-dashboard-trial:${ARCAN_DASHBOARD_VERSION}
-    restart: unless-stopped
+    depends_on:
+      - arcan-server
     ports:
       - "3000:80"
     environment:
@@ -11,8 +12,9 @@ services:
   
   arcan-server:
     image: ghcr.io/arcan-tech/arcan-server-trial:${ARCAN_SERVER_VERSION}
-    restart: unless-stopped
     entrypoint: ["./arcan-server.sh", "-l", "/licences/${ARCAN_LICENCE_FILENAME}"]
+    depends_on:
+      - arcan-postgres
     ports:
       - "8080:8080"
     environment:
@@ -20,8 +22,29 @@ services:
       SERVER_DATA_DIRECTORY: /tmp
       SERVER_PORT: 8080                                    
       SERVER_DEMO_MODE: false                              
-      SERVER_SKIP_AUTHZ: true                             
+      SERVER_SKIP_AUTHZ: true
+      JDBC_URL: arcan-postgres:5432/arcan
+      JDBC_USERNAME: arcan
+      JDBC_PASSWORD: arcan
       LOGGING_LEVEL: DEBUG 
     volumes:
       - "./licences/${ARCAN_LICENCE_FILENAME}:/licences/${ARCAN_LICENCE_FILENAME}:ro"
       - "./projects:/arcan-server/projects"
+
+  arcan-postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: arcan
+      POSTGRES_PASSWORD: arcan
+      POSTGRES_DB: arcan
+    volumes:
+      - arcan-db-volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "arcan"]
+      interval: 5s
+      retries: 5
+
+volumes:
+  arcan-db-volume:
