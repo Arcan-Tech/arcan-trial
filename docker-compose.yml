@@ -20,6 +20,7 @@ services:
     environment:
       ARCAN_LICENCE_FILENAME: "${ARCAN_LICENCE_FILENAME}"
       SERVER_DATA_DIRECTORY: /tmp
+      SERVER_JVM_MEMORY: 8G
       SERVER_PORT: 8080                                    
       SERVER_DEMO_MODE: false                              
       SERVER_SKIP_AUTHZ: true
