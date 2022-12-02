@@ -1,10 +1,10 @@
 # Arcan Trial
 
-## Requirements for native Docker execution
+## Requirements for native Docker execution mode
 - Docker Engine >= 20.10 (See [https://docs.docker.com/engine/install](https://docs.docker.com/engine/install))
 - Docker Compose (See [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/))
 
-## Requirements for VM-based Docker execution mode with [Vagrant](https://developer.hashicorp.com/vagrant)
+## Requirements for VM-based Docker execution mode using [Vagrant](https://developer.hashicorp.com/vagrant)
 - Vagrant
 - VirtualBox
 
@@ -20,13 +20,13 @@ First, clone or [download](https://github.com/Arcan-Tech/arcan-trial/archive/ref
 - Copy the content of the [.env.example](./.env.example) file into a new file named `.env`.
 - Change the value of the variable `ARCAN_LICENCE_FILENAME` with the name of licence file you copied in the [licences](./licences) directory.
 
-### Run Arcan with native Docker execution
+### Run Arcan with native Docker execution mode
 - To run the Arcan dashboard and the server, open your favourite terminal and navigate to the `/arcan-trial` folder. Within the folder execute: `docker compose up`.
 - You will find the dashboard at [http://localhost:3000](http://localhost:3000).
 - To analyse a *remote* project, simply use the remote repo url when creating a new project. If the repo is private, remember to use a personal access token as password (see the [documentation](./documentation) for more info).
 - To analyse a *local* project, copy the project folder into `/arcan-trial/projects`. When creating a new project, specify the path to analyse as follows: `./projects/<folder_name>`  (see the [documentation](./documentation) for more info).
 
-### Run Arcan with VM-based Docker execution mode with [Vagrant](https://developer.hashicorp.com/vagrant)
+### Run Arcan with VM-based Docker execution mode using [Vagrant](https://developer.hashicorp.com/vagrant)
 - To run the Arcan dashboard and the server, open your favourite terminal and navigate to the `/arcan-trial` folder. Within the folder execute: `vagrant up`.
 - You will find the dashboard at [http://localhost:3000](http://localhost:3000).
 - To analyse a *remote* project, simply use the remote repo url when creating a new project. If the repo is private, remember to use a personal access token as password (see the [documentation](./documentation) for more info).
