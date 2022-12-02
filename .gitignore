@@ -1,3 +1,4 @@
 .env
 licences/*
 !licences/.gitkeep
+.vagrant
