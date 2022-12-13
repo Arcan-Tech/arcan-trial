@@ -27,7 +27,7 @@ services:
       JDBC_URL: arcan-postgres:5432/arcan
       JDBC_USERNAME: arcan
       JDBC_PASSWORD: arcan
-      LOGGING_LEVEL: DEBUG 
+      LOGGING_LEVEL: INFO 
     volumes:
       - "./licences/${ARCAN_LICENCE_FILENAME}:/licences/${ARCAN_LICENCE_FILENAME}:ro"
       - "./projects:/arcan-server/projects"
