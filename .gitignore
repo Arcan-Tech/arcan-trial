@@ -1,3 +1,6 @@
 .env
 licences/*
 !licences/.gitkeep
+
+backup/*.sql
+backup/*.sql.gz
