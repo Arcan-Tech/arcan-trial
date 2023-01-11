@@ -19,7 +19,7 @@ services:
       - "8080:8080"
     environment:
       ARCAN_LICENCE_FILENAME: "${ARCAN_LICENCE_FILENAME}"
-      SERVER_DATA_DIRECTORY: /tmp
+      SERVER_DATA_DIRECTORY: /arcan-server/data
       SERVER_JVM_MEMORY: 8G
       SERVER_PORT: 8080                                    
       SERVER_DEMO_MODE: false                              
@@ -27,10 +27,11 @@ services:
       JDBC_URL: arcan-postgres:5432/arcan
       JDBC_USERNAME: arcan
       JDBC_PASSWORD: arcan
-      LOGGING_LEVEL: DEBUG 
+      LOGGING_LEVEL: INFO 
     volumes:
       - "./licences/${ARCAN_LICENCE_FILENAME}:/licences/${ARCAN_LICENCE_FILENAME}:ro"
       - "./projects:/arcan-server/projects"
+      - "./data:/arcan-server/data"
 
   arcan-postgres:
     image: postgres:13

@@ -2,3 +2,5 @@
 licences/*
 !licences/.gitkeep
 .vagrant
+backup/*.sql
+backup/*.sql.gz
