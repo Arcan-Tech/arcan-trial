@@ -9,10 +9,12 @@ services:
       REACT_APP_GRAPHQL_SERVER_URL: http://localhost:8080/graphql
       REACT_APP_PUBLIC_URL: http://localhost:3000
       REACT_APP_SKIP_AUTH: true
+      REACT_APP_INSIGHTS_URL: http://localhost:4344
+      REACT_APP_HIDE_INSIGHTS: true
   
   arcan-server:
     image: ghcr.io/arcan-tech/arcan-server-trial:${ARCAN_SERVER_VERSION}
-    entrypoint: ["./arcan-server.sh", "-l", "/licences/${ARCAN_LICENCE_FILENAME}"]
+    entrypoint: ["./arcan-server.sh", "--skip"]
     depends_on:
       - arcan-postgres
     ports:
