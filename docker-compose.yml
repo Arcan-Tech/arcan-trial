@@ -3,18 +3,19 @@ services:
     image: ghcr.io/arcan-tech/arcan-dashboard-trial:${ARCAN_DASHBOARD_VERSION}
     depends_on:
       - arcan-server
+      - arcan-insights
     ports:
       - "3000:80"
     environment:
       REACT_APP_GRAPHQL_SERVER_URL: http://localhost:8080/graphql
       REACT_APP_PUBLIC_URL: http://localhost:3000
       REACT_APP_SKIP_AUTH: true
-      REACT_APP_INSIGHTS_URL: http://localhost:4344
-      REACT_APP_HIDE_INSIGHTS: true
+      REACT_APP_INSIGHTS_URL: http://localhost:4242
+      REACT_APP_HIDE_INSIGHTS: false
   
   arcan-server:
     image: ghcr.io/arcan-tech/arcan-server-trial:${ARCAN_SERVER_VERSION}
-    entrypoint: ["./arcan-server.sh", "--skip"]
+    entrypoint: ["./arcan-server.sh", "-l", "/licences/${ARCAN_LICENCE_FILENAME}"]
     depends_on:
       - arcan-postgres
     ports:
@@ -49,6 +50,14 @@ services:
       test: ["CMD", "pg_isready", "-U", "arcan"]
       interval: 5s
       retries: 5
+
+  arcan-insights:
+    image: ghcr.io/arcan-tech/arcan-shiny-insights-trial:${ARCAN_INSIGHTS_VERSION}
+    ports: 
+     - "4242:4343"
+    stop_signal: SIGKILL
+    environment:
+      GRAPHQL_ENDPOINT: "http://arcan-server:8080/graphql"
 
 volumes:
   arcan-db-volume:
