@@ -1,63 +1,208 @@
 services:
   arcan-dashboard:
-    image: ghcr.io/arcan-tech/arcan-dashboard-trial:${ARCAN_DASHBOARD_VERSION}
+    image: ghcr.io/arcan-tech/arcan-dashboard-3:${ARCAN_DASHBOARD_VERSION}
     depends_on:
+      - arcan-auth-server
       - arcan-server
-      - arcan-insights
+    restart: unless-stopped
     ports:
       - "3000:80"
     environment:
-      REACT_APP_GRAPHQL_SERVER_URL: http://localhost:8080/graphql
-      REACT_APP_PUBLIC_URL: http://localhost:3000
-      REACT_APP_SKIP_AUTH: true
-      REACT_APP_INSIGHTS_URL: http://localhost:4242
-      REACT_APP_HIDE_INSIGHTS: false
-  
+      - VITE_APP_GRAPHQL_SERVER_URL=http://localhost:8080/graphql
+      - VITE_APP_PUBLIC_URL=http://localhost:3000
+      - VITE_APP_KC_URL=http://localhost:9090
+      - VITE_APP_KC_REALM=arcan
+      - VITE_APP_KC_CLIENT_ID=react-auth
+      - VITE_APP_SKIP_AUTH=false
+      - VITE_APP_HIDE_INSIGHTS=true
+      - VITE_APP_IS_DEMO=false
+      - VITE_APP_OIDC_USERNAME=changeme
+      - VITE_APP_OIDC_PASSWORD=changeme
+      - VITE_AUTH_TOKEN_URL=http://localhost:9090/realms/arcan/protocol/openid-connect/token
+
   arcan-server:
-    image: ghcr.io/arcan-tech/arcan-server-trial:${ARCAN_SERVER_VERSION}
-    entrypoint: ["./arcan-server.sh", "-l", "/licences/${ARCAN_LICENCE_FILENAME}"]
+    image: ghcr.io/arcan-tech/arcan-server:${ARCAN_SERVER_VERSION}
     depends_on:
-      - arcan-postgres
+      - arcan-server-orientdb
+      - arcan-server-postgres
     ports:
       - "8080:8080"
+    entrypoint: ["./arcan-server.sh", "-l", "/licences/ArcanLicence"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
     environment:
-      ARCAN_LICENCE_FILENAME: "${ARCAN_LICENCE_FILENAME}"
-      SERVER_DATA_DIRECTORY: /arcan-server/data
-      SERVER_JVM_MEMORY: 8G
-      SERVER_PORT: 8080                                    
-      SERVER_DEMO_MODE: false                              
-      SERVER_SKIP_AUTHZ: true
-      JDBC_URL: arcan-postgres:5432/arcan
-      JDBC_USERNAME: arcan
-      JDBC_PASSWORD: arcan
-      LOGGING_LEVEL: INFO 
+      - OPA_BASE_URL=http://arcan-server-opa:8181
+      - OPA_POLICY_PATH=/v1/data/arcan_server/authz
+      - ORIENT_SERVER_URL=remote:arcan-server-orientdb
+      - ORIENT_SERVER_USER=root
+      - ORIENT_SERVER_PASSWORD=root
+      - SERVER_ORIENT_MODE=true
+      - SERVER_DEMO_MODE=false
+      - ARCAN_LICENCE_FILENAME="${ARCAN_LICENCE_FILENAME}"
+      - SERVER_DATA_DIRECTORY=/arcan-server/data
+      - SERVER_PORT=8080
+      - SERVER_JVM_MEMORY=4G
+      - LOGGING_LEVEL=INFO
+      - JDBC_URL=arcan-server-postgres:5432/arcandb
+      - JDBC_USERNAME=arcan_server
+      - JDBC_PASSWORD=password
     volumes:
       - "./licences/${ARCAN_LICENCE_FILENAME}:/licences/${ARCAN_LICENCE_FILENAME}:ro"
-      - "./projects:/arcan-server/projects"
-      - "./data:/arcan-server/data"
+      - ./data:/arcan-server/data
+      - ./projects:/arcan-server/projects
+    networks:
+      - arcan-server
 
-  arcan-postgres:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: arcan
-      POSTGRES_PASSWORD: arcan
-      POSTGRES_DB: arcan
-    volumes:
-      - arcan-db-volume:/var/lib/postgresql/data
+  arcan-server-postgres:
+    image: postgres:${ARCAN_SERVER_POSTGRES_VERSION}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-zv", "localhost", "5432"]
+      interval: 30s
+      timeout: 10s
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "arcan"]
-      interval: 5s
-      retries: 5
-
-  arcan-insights:
-    image: ghcr.io/arcan-tech/arcan-shiny-insights-trial:${ARCAN_INSIGHTS_VERSION}
-    ports: 
-     - "4242:4343"
-    stop_signal: SIGKILL
     environment:
-      GRAPHQL_ENDPOINT: "http://arcan-server:8080/graphql"
+      - POSTGRES_DB=arcandb
+      - POSTGRES_USER=arcan_server
+      - POSTGRES_PASSWORD=password
+      - PGPASSWORD=password
+    volumes:
+      - arcan-server-postgres-data:/var/lib/postgresql/data
+    networks:
+      - arcan-server
+
+  arcan-server-orientdb:
+    image: orientdb:${ARCAN_ORIENT_VERSION}
+    restart: unless-stopped
+    command: server.sh
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:2480/listDatabases" ]
+      interval: 30s
+      timeout: 10s
+    environment:
+      - ORIENTDB_ROOT_USER=root
+      - ORIENTDB_ROOT_PASSWORD=root
+    volumes:
+      - arcan-server-orientdb-data:/orientdb/databases
+    ports:
+      - "2480:2480"
+      - "2424:2424"
+    networks:
+      - arcan-server
+
+  arcan-licence-server:
+    image: 'ghcr.io/arcan-tech/arcan-licence-server:${ARCAN_LICENCE_SERVER_VERSION}'
+    restart: unless-stopped
+    environment:
+      - LOGGING_LEVEL_ROOT=info
+      - LOGGING_LEVEL=info
+      - APP_PLATFORM_LICENCE_PATH=/data/ArcanLicence
+      - APP_RELEASE_RATE_MILLI=30000
+    volumes:
+      - type: bind
+        source: "./licences/${ARCAN_LICENCE_FILENAME}"
+        target: "/data/${ARCAN_LICENCE_FILENAME}"
+    networks:
+      - arcan-auth
+
+  arcan-auth-server:
+    image: ghcr.io/arcan-tech/arcan-auth:${ARCAN_AUTH_VERSION}
+    depends_on:
+      - arcan-auth-postgres
+    restart: unless-stopped
+    command: ["start-dev","--import-realm"]
+    ports:
+      - "9090:8080"
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:9000/health/ready"]
+      interval: 30s
+      timeout: 10s
+    environment:
+      - ARCAN_REALM_NAME=arcan
+      - ARCAN_REALM_FRONTEND_URL=http://localhost:9090
+      - ARCAN_USER_A_USERNAME=arcan
+      - ARCAN_USER_A_PASSWORD=password
+      - ARCAN_USER_PROFILE_ENABLED=false
+      - ARCAN_USER_PROFILE_EMAIL_VALIDATION_PATTERN=.+@example.com
+      - ARCAN_DASHBOARD_URL=http://localhost:3000
+      - ARCAN_DASHBOARD_CLIENT_ID=react-auth
+      - SMTP_SERVER_HOST=mail.arcan.tech
+      - SMTP_SERVER_PORT=465
+      - SMTP_SERVER_FROM_ADDRESS=noreply@arcan.tech
+      - SMTP_SERVER_FROM_DISPLAY_NAME=Arcan
+      - SMTP_SERVER_AUTH=true
+      - SMTP_SERVER_USER=noreply@arcan.tech
+      - SMTP_SERVER_PASSWORD=changeme
+      - SMTP_SERVER_SSL=true
+      - SMTP_SERVER_START_TLS=false
+      - GITHUB_LOGIN_ENABLED=false
+      - GITHUB_LOGIN_SECRET=fake
+      - GITHUB_LOGIN_ID=fake
+      - GITLAB_LOGIN_ENABLED=false
+      - GITLAB_LOGIN_SECRET=fake
+      - GITLAB_LOGIN_CLIENT_ID=fake
+      - KC_VERSION=26.0.5
+      - KC_LOG_LEVEL=WARN
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=false
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://arcan-auth-postgres:5432/arcan_auth
+      - KC_DB_USERNAME=arcan_auth
+      - KC_DB_PASSWORD=password
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=password$
+    volumes:
+      - ./etc/keycloak/realms:/opt/keycloak/data/import:ro
+    networks:
+      - arcan-auth
+
+  arcan-auth-postgres:
+    image: postgres:${ARCAN_AUTH_POSTGRES_VERSION}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-zv", "localhost", "5432"]
+      interval: 30s
+      timeout: 10s
+    environment:
+      - POSTGRES_DB=arcan_auth
+      - POSTGRES_USER=arcan_auth
+      - POSTGRES_PASSWORD=password
+      - PGPASSWORD=password
+    volumes:
+      - arcan-auth-postgres-data:/var/lib/postgresql/data
+    networks:
+      - arcan-auth
+
+  arcan-server-opa:
+    image: openpolicyagent/opa:${OPA_VERSION}
+    restart: unless-stopped
+    command:
+      - "run"
+      - "--log-level=info"
+      - "--log-format=json-pretty"
+      - "--server"
+      - "--set=decision_logs.console=false"
+      - "/config"
+    environment:
+      - AUTH_SERVER_URL=http://arcan-auth-server:8080
+      - AUTH_REALM=arcan
+      - LICENCE_SERVER_URL=http://arcan-licence-server:8080
+    volumes:
+      - ./etc/opa/policies:/config:ro
+    networks:
+      - arcan-server
+      - arcan-auth
+
+networks:
+  arcan-server: {}
+  arcan-auth: {}
 
 volumes:
-  arcan-db-volume:
+  arcan-auth-postgres-data: {}
+  arcan-server-postgres-data: {}
+  arcan-server-data: {}
+  arcan-server-orientdb-data: {}
